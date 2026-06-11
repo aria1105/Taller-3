@@ -1,0 +1,448 @@
+/*
+ * style.css - Estilos visuales para la aplicación web del módulo hexagonal purificador
+ * 
+ * Diseño mobile-first, minimalista, con paleta de colores verde oscuro, blanco y verde agua.
+ * Se enfoca en ser legible y fácil de usar en pantallas de celular.
+ */
+
+/* ============================================================
+   ESTILOS GLOBALES — Reset y configuración base
+   ============================================================ */
+
+* {
+  margin: 0;                                    /* elimina los márgenes por defecto de todos los elementos */
+  padding: 0;                                   /* elimina el relleno por defecto de todos los elementos */
+  box-sizing: border-box;                       /* incluye el borde y el relleno en el tamaño total del elemento */
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;    /* fuente sans-serif limpia y legible en pantallas */
+  background-color: #1b4332;                    /* color de fondo: verde oscuro (paleta principal) */
+  color: #ffffff;                               /* color del texto: blanco para contrastar con el fondo */
+  min-height: 100vh;                            /* altura mínima de toda la pantalla del navegador */
+  padding-bottom: 80px;                         /* espacio abajo para que el contenido no quede detrás de la navegación */
+  line-height: 1.5;                             /* altura de línea para mejor legibilidad */
+}
+
+/* ============================================================
+   BARRA DE NAVEGACIÓN SUPERIOR (TABS)
+   ============================================================ */
+
+.nav-tabs {
+  display: flex;                                /* usa flexbox para alinear los botones horizontalmente */
+  background-color: #0d2818;                    /* fondo un poco más oscuro que el cuerpo */
+  position: fixed;                              /* fija la barra en la parte superior */
+  top: 0;                                       /* la pega al borde superior */
+  left: 0;                                      /* la pega al borde izquierdo */
+  right: 0;                                     /* la pega al borde derecho */
+  z-index: 100;                                 /* la pone por encima del resto del contenido */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);    /* sombra suave debajo de la barra */
+}
+
+.tab {
+  flex: 1;                                      /* cada botón ocupa el mismo ancho */
+  padding: 14px 8px;                            /* relleno interno: 14px arriba/abajo, 8px a los lados */
+  border: none;                                 /* sin borde visible */
+  background: transparent;                      /* fondo transparente por defecto */
+  color: #95d5b2;                               /* color del texto: verde claro suave */
+  font-size: 14px;                              /* tamaño de letra */
+  font-weight: bold;                            /* texto en negrita */
+  cursor: pointer;                              /* cambia el cursor a mano cuando pasa sobre el botón */
+  transition: all 0.3s ease;                   /* transición suave para los cambios de color */
+}
+
+.tab:hover {
+  background-color: #1b4332;                    /* cambia el fondo al pasar el mouse (oscuro) */
+  color: #ffffff;                               /* cambia el color del texto a blanco */
+}
+
+.tab.activo {
+  background-color: #52b788;                    /* fondo verde agua para la pestaña activa */
+  color: #1b4332;                               /* texto en verde oscuro para la pestaña activa */
+}
+
+/* ============================================================
+   PANTALLAS — Secciones que se muestran/ocultan
+   ============================================================ */
+
+.pantalla {
+  display: none;                                /* oculta todas las pantallas por defecto */
+  padding: 80px 16px 20px 16px;                 /* relleno: 80px arriba (por la barra fija), 16px a los lados, 20px abajo */
+  max-width: 480px;                             /* ancho máximo para que no se estire demasiado en tablets */
+  margin: 0 auto;                               /* centra el contenido horizontalmente */
+}
+
+.pantalla.activa {
+  display: block;                               /* muestra solo la pantalla que tiene la clase "activa" */
+}
+
+.titulo {
+  text-align: center;                           /* centra el título */
+  font-size: 20px;                              /* tamaño de letra del título */
+  margin-bottom: 20px;                          /* espacio debajo del título */
+  color: #52b788;                               /* color verde agua para el título */
+}
+
+.subtitulo {
+  font-size: 16px;                              /* tamaño de letra del subtítulo */
+  margin-bottom: 12px;                          /* espacio debajo del subtítulo */
+  color: #95d5b2;                               /* color verde claro */
+  text-align: center;                           /* centra el subtítulo */
+}
+
+/* ============================================================
+   LED INDICADOR VIRTUAL — Círculo que simula el LED físico
+   ============================================================ */
+
+.led {
+  width: 16px;                                  /* ancho del círculo del LED */
+  height: 16px;                                 /* alto del círculo del LED */
+  border-radius: 50%;                           /* hace que el cuadrado sea un círculo perfecto */
+  margin: 0 auto 10px auto;                     /* centra el LED y agrega espacio abajo */
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3); /* brillo suave alrededor del LED */
+  transition: background-color 0.5s ease;      /* transición suave cuando cambia de color */
+}
+
+.led-verde {
+  background-color: #2d6a4f;                    /* color verde oscuro cuando está apagado/esperando */
+}
+
+.led-verde.encendido {
+  background-color: #52b788;                    /* verde brillante cuando todo está bien */
+  box-shadow: 0 0 12px rgba(82, 183, 136, 0.6); /* brillo verde alrededor del LED */
+}
+
+.led-amarillo.encendido {
+  background-color: #ffd166;                    /* amarillo cuando hay advertencia */
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.6); /* brillo amarillo alrededor del LED */
+}
+
+.led-rojo.encendido {
+  background-color: #e63946;                    /* rojo cuando hay estado crítico */
+  box-shadow: 0 0 12px rgba(230, 57, 70, 0.6); /* brillo rojo alrededor del LED */
+}
+
+/* ============================================================
+   TARJETAS — Contenedores con borde y sombra
+   ============================================================ */
+
+.tarjeta {
+  background-color: #0d2818;                    /* fondo oscuro para las tarjetas */
+  border-radius: 12px;                          /* esquinas redondeadas */
+  padding: 16px;                                /* relleno interno */
+  margin-bottom: 12px;                          /* espacio entre tarjetas */
+  display: flex;                                /* usa flexbox para alinear ícono y contenido */
+  align-items: center;                          /* centra verticalmente los elementos */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);    /* sombra suave */
+}
+
+.tarjeta-centrada {
+  flex-direction: column;                       /* apila los elementos verticalmente */
+  text-align: center;                           /* centra el texto */
+}
+
+.tarjeta-icono {
+  font-size: 32px;                              /* tamaño grande para el ícono */
+  margin-right: 16px;                           /* espacio entre el ícono y el contenido */
+}
+
+.tarjeta-contenido {
+  display: flex;                                /* flexbox para alinear valor, unidad y etiqueta */
+  flex-wrap: wrap;                              /* permite que los elementos salten a la siguiente línea si no entran */
+  align-items: baseline;                        /* alinea por la línea base del texto */
+}
+
+.tarjeta-valor {
+  font-size: 36px;                              /* tamaño grande para el valor numérico */
+  font-weight: bold;                            /* negrita para el valor */
+  color: #52b788;                               /* color verde agua */
+}
+
+.tarjeta-unidad {
+  font-size: 18px;                              /* tamaño mediano para la unidad */
+  color: #95d5b2;                               /* color verde claro */
+  margin-left: 4px;                             /* espacio pequeño a la izquierda de la unidad */
+}
+
+.tarjeta-etiqueta {
+  width: 100%;                                  /* ocupa todo el ancho disponible */
+  font-size: 12px;                              /* tamaño pequeño para la etiqueta */
+  color: #95d5b2;                               /* color verde claro */
+  margin-top: 4px;                              /* espacio encima de la etiqueta */
+}
+
+/* ============================================================
+   MEDIDOR CIRCULAR (GAUGE) — Calidad de aire
+   ============================================================ */
+
+.gauge-contenedor {
+  position: relative;                           /* para posicionar el texto dentro del SVG */
+  width: 140px;                                 /* ancho del contenedor */
+  height: 140px;                                /* alto del contenedor */
+  margin: 0 auto;                               /* centra el contenedor */
+}
+
+.gauge-svg {
+  transform: rotate(-90deg);                    /* rota el SVG para que el arranque sea desde arriba */
+}
+
+.gauge-fondo {
+  fill: none;                                   /* sin relleno */
+  stroke: #1b4332;                             /* color del círculo de fondo */
+  stroke-width: 8;                              /* grosor de la línea */
+}
+
+.gauge-avance {
+  fill: none;                                   /* sin relleno */
+  stroke: #52b788;                              /* color de la barra de avance (verde agua) */
+  stroke-width: 8;                              /* grosor de la línea */
+  stroke-linecap: round;                        /* extremos redondeados de la línea */
+  transition: stroke-dashoffset 1s ease, stroke 0.5s ease;  /* animación suave al cambiar el valor */
+}
+
+.gauge-texto {
+  position: absolute;                           /* posiciona el texto dentro del SVG */
+  top: 50%;                                     /* centra verticalmente */
+  left: 50%;                                    /* centra horizontalmente */
+  transform: translate(-50%, -50%);             /* ajusta el centro exacto */
+  font-size: 32px;                              /* tamaño grande para el número */
+  font-weight: bold;                            /* negrita */
+  color: #ffffff;                               /* color blanco */
+}
+
+.gauge-etiqueta {
+  font-size: 12px;                              /* tamaño pequeño */
+  color: #95d5b2;                               /* color verde claro */
+  margin-top: 8px;                              /* espacio encima */
+}
+
+/* ============================================================
+   INDICADOR DE pH — Círculo de color
+   ============================================================ */
+
+.ph-contenedor {
+  display: flex;                                /* flexbox para alinear círculo y valor */
+  align-items: center;                          /* centra verticalmente */
+  justify-content: center;                      /* centra horizontalmente */
+  gap: 16px;                                    /* espacio entre el círculo y el número */
+}
+
+.ph-bola {
+  width: 60px;                                  /* ancho del círculo de pH */
+  height: 60px;                                 /* alto del círculo de pH */
+  border-radius: 50%;                           /* forma circular */
+  background-color: #2d6a4f;                    /* color por defecto: verde oscuro */
+  transition: background-color 0.5s ease;      /* transición suave al cambiar de color */
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.2); /* brillo suave */
+}
+
+.ph-bola.saludable {
+  background-color: #52b788;                    /* verde: pH saludable */
+}
+
+.ph-bola.advertencia {
+  background-color: #ffd166;                    /* amarillo: pH en advertencia */
+}
+
+.ph-bola.critico {
+  background-color: #e63946;                    /* rojo: pH crítico */
+}
+
+.ph-valor {
+  font-size: 36px;                              /* tamaño grande para el valor de pH */
+  font-weight: bold;                            /* negrita */
+  color: #ffffff;                               /* color blanco */
+}
+
+.ph-etiqueta {
+  font-size: 14px;                              /* tamaño de la etiqueta */
+  color: #95d5b2;                               /* color verde claro */
+  margin-top: 8px;                              /* espacio encima */
+}
+
+/* ============================================================
+   MENSAJE DE ESTADO Y TIMESTAMP
+   ============================================================ */
+
+.mensaje-estado {
+  text-align: center;                           /* centra el mensaje */
+  font-size: 16px;                              /* tamaño del texto */
+  font-weight: bold;                            /* negrita */
+  color: #52b788;                               /* color verde agua */
+  padding: 16px;                                /* relleno interno */
+  background-color: #0d2818;                    /* fondo oscuro */
+  border-radius: 12px;                          /* esquinas redondeadas */
+  margin-bottom: 12px;                          /* espacio debajo */
+}
+
+.timestamp {
+  text-align: center;                           /* centra el timestamp */
+  font-size: 12px;                              /* tamaño pequeño */
+  color: #95d5b2;                               /* color verde claro */
+  opacity: 0.8;                                 /* un poco transparente */
+}
+
+/* ============================================================
+   PANTALLA DE HISTORIAL — Controles y gráfico
+   ============================================================ */
+
+.controles-grafico {
+  display: flex;                                /* flexbox para los botones de control */
+  gap: 8px;                                     /* espacio entre botones */
+  margin-bottom: 16px;                          /* espacio debajo de los controles */
+}
+
+.btn-control {
+  flex: 1;                                      /* cada botón ocupa el mismo ancho */
+  padding: 10px 8px;                            /* relleno interno */
+  border: 2px solid #52b788;                   /* borde verde agua */
+  background: transparent;                      /* fondo transparente */
+  color: #95d5b2;                               /* texto verde claro */
+  border-radius: 8px;                           /* esquinas redondeadas */
+  font-size: 12px;                              /* tamaño de letra */
+  font-weight: bold;                            /* negrita */
+  cursor: pointer;                              /* cursor de mano */
+  transition: all 0.3s ease;                   /* transición suave */
+}
+
+.btn-control:hover {
+  background-color: #1b4332;                    /* fondo más claro al pasar el mouse */
+}
+
+.btn-control.activo {
+  background-color: #52b788;                    /* fondo verde agua cuando está activo */
+  color: #1b4332;                               /* texto verde oscuro cuando está activo */
+  border-color: #52b788;                        /* borde del mismo color */
+}
+
+.grafico-contenedor {
+  background-color: #0d2818;                    /* fondo oscuro para el gráfico */
+  border-radius: 12px;                          /* esquinas redondeadas */
+  padding: 12px;                                /* relleno interno */
+  margin-bottom: 12px;                          /* espacio debajo */
+}
+
+.nota {
+  text-align: center;                           /* centra la nota */
+  font-size: 12px;                              /* tamaño pequeño */
+  color: #95d5b2;                               /* color verde claro */
+  opacity: 0.7;                                 /* un poco transparente */
+}
+
+/* ============================================================
+   PANTALLA DE ACERCA DE — Diagrama y descripción
+   ============================================================ */
+
+.diagrama-contenedor {
+  display: flex;                                /* flexbox para centrar */
+  justify-content: center;                      /* centra horizontalmente */
+  margin-bottom: 20px;                          /* espacio debajo */
+}
+
+.hexagono {
+  width: 260px;                                 /* ancho del hexágono */
+  height: 260px;                                /* alto del hexágono */
+  background-color: #0d2818;                    /* fondo oscuro */
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  /* clip-path crea la forma de hexágono con 6 puntos */
+  position: relative;                           /* para posicionar los sensores dentro */
+  display: flex;                                /* flexbox */
+  align-items: center;                          /* centra verticalmente */
+  justify-content: center;                      /* centra horizontalmente */
+}
+
+.hex-sensor {
+  position: absolute;                           /* posiciona cada sensor en un lugar específico */
+  font-size: 10px;                              /* tamaño pequeño para las etiquetas */
+  background-color: #1b4332;                    /* fondo verde oscuro */
+  padding: 4px 6px;                             /* relleno interno */
+  border-radius: 6px;                           /* esquinas redondeadas */
+  border: 1px solid #52b788;                    /* borde verde agua */
+  color: #ffffff;                               /* texto blanco */
+  white-space: nowrap;                          /* evita que el texto se corte en varias líneas */
+}
+
+.hex-sensor-dht {
+  top: 15%;                                     /* posiciona arriba a la izquierda */
+  left: 10%;
+}
+
+.hex-sensor-tcs {
+  top: 15%;                                     /* posiciona arriba a la derecha */
+  right: 10%;
+}
+
+.hex-sensor-mq {
+  bottom: 20%;                                  /* posiciona abajo */
+  left: 50%;
+  transform: translateX(-50%);                  /* centra horizontalmente */
+}
+
+.hex-sensor-led {
+  bottom: 10%;                                  /* posiciona abajo a la izquierda */
+  left: 10%;
+}
+
+.hex-sensor-planta {
+  font-size: 24px;                              /* tamaño grande para el ícono de la planta central */
+  background: none;                             /* sin fondo */
+  border: none;                                 /* sin borde */
+}
+
+.hex-label {
+  position: absolute;                           /* posiciona debajo del hexágono */
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #95d5b2;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   DESCRIPCIÓN — Texto informativo
+   ============================================================ */
+
+.descripcion {
+  background-color: #0d2818;                    /* fondo oscuro */
+  border-radius: 12px;                          /* esquinas redondeadas */
+  padding: 20px;                                /* relleno interno */
+}
+
+.descripcion h2 {
+  color: #52b788;                               /* título en verde agua */
+  font-size: 18px;                              /* tamaño del título */
+  margin-bottom: 12px;                          /* espacio debajo */
+}
+
+.descripcion h3 {
+  color: #95d5b2;                               /* subtítulo en verde claro */
+  font-size: 15px;                              /* tamaño del subtítulo */
+  margin-top: 16px;                             /* espacio encima */
+  margin-bottom: 8px;                           /* espacio debajo */
+}
+
+.descripcion p {
+  font-size: 14px;                              /* tamaño del párrafo */
+  margin-bottom: 12px;                          /* espacio debajo */
+  line-height: 1.6;                             /* altura de línea para mejor legibilidad */
+}
+
+.descripcion ul, .descripcion ol {
+  margin-left: 20px;                            /* sangría a la izquierda */
+  margin-bottom: 12px;                          /* espacio debajo */
+}
+
+.descripcion li {
+  font-size: 14px;                              /* tamaño del elemento de lista */
+  margin-bottom: 6px;                           /* espacio entre elementos */
+  line-height: 1.5;                             /* altura de línea */
+}
+
+.proyecto-universidad {
+  text-align: center;                           /* centra el texto */
+  font-style: italic;                           /* cursiva */
+  color: #52b788;                               /* color verde agua */
+  margin-top: 20px;                             /* espacio encima */
+  font-size: 13px;                              /* tamaño pequeño */
+}
