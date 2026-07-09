@@ -1,47 +1,30 @@
-Generame UN SOLO ARCHIVO HTML COMPLETO y autónomo (sin React, sin TypeScript, sin módulos, sin build tools, sin imports externos excepto Chart.js) para una web app mobile-first de un purificador de aire hexagonal con planta marina. Usa un ESP32 con DHT11, TCS230, backend Node.js, y Chart.js.
+Genera SOLO el HTML y CSS visual de un dashboard mobile-first para un purificador de aire hexagonal. NO incluyas JavaScript, NO incluyas Chart.js, NO incluyas lógica. Solo HTML estático con CSS. Quiero ver el DISEÑO VISUAL únicamente.
 
-CRITICO: El output debe ser UN UNICO ARCHIVO .html que funcione solo. Todo el CSS dentro de <style> y todo el JS dentro de <script>. NADA de TypeScript, React, módulos ES, bundlers, ni imports de archivos.
+El HTML debe ser un solo archivo autónomo con <style> embebido. Sin React, sin TypeScript, sin módulos, sin imports.
 
-STYLE & AESTHETICS:
-- Minimalist, inspired by Apple, Tesla, and scientific dashboards
-- Light theme palette:
-  - Primary dark: #37371B (deep olive)
-  - Secondary: #AFAE90 (muted green-beige)
-  - Background: #F0EADE (soft cream)
-- Soft shadows, subtle depth
-- Rounded cards (border-radius: 16px)
-- Thin line icons (Unicode or simple SVG, no filled icons)
-- System fonts: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif
-- Calm, breathable spacing (padding 20-24px)
-
-INTERFACE - 3 pantallas SPA con navegacion inferior tipo app:
+ESTILO: Apple/Tesla/scientific dashboard, minimalista, tema claro.
+PALETA: primary dark #37371B, secondary #AFAE90, background #F0EADE.
 
 PANTALLA 1 - DASHBOARD:
-- Gauge circular animado para el pH que cambia de color segun estado
-- Temperatura en grande con icono de termometro
-- Humedad en grande con icono de gota
-- Estado: "Saludable" (verde), "Advertencia" (naranja), "Critico" (rojo)
-- Ultima actualizacion con timestamp
-- Auto-refresh cada 5 segundos con fetch a /latest
+- Header con título "Siphon" y subtítulo "Purificador Hexagonal"
+- Gauge semicircular grande para pH (parecido a Apple Watch activity rings)
+- Dos tarjetas lado a lado: Temperatura y Humedad con iconos
+- Tarjeta de estado con icono y texto "Saludable"/"Advertencia"/"Crítico"
+- Fondo crema, tarjetas blancas con blur/glassmorphism, bordes redondeados
 
 PANTALLA 2 - HISTORIAL:
-- Botones para seleccionar: ultimas 10, 25 o 50 lecturas
-- Chart.js line chart con 3 lineas: temp (rojo #E76F51), humedad (azul #457B9D), pH (verde #52B788)
-- Eje X con hora:minuto
-- Cards con estadisticas: minimo, maximo, promedio de cada variable
-- Fetch a /history con el limite seleccionado
+- Selector de rango como chips/botones: 10, 25, 50, 100
+- Grid de 9 tarjetas de estadísticas (min, max, prom para temp, hum, pH)
+- Espacio para el gráfico Chart.js (dejalo como un div vacío con altura)
 
 PANTALLA 3 - ACERCA DE:
-- Hexagono con CSS
-- Lista de componentes: ESP32, DHT11, TCS230, planta marina
-- Texto explicativo breve
+- Hexágono decorativo con CSS
+- Lista de componentes con iconos y descripciones
+- Texto explicativo
 
-API ENDPOINTS (ya existen en el backend):
-- GET /latest → { temperatura, humedad, ph, phStatus, colorR, colorG, colorB, timestamp }
-- GET /history?limit=50 → array de objetos con los mismos campos
+NAVEGACIÓN:
+- Barra inferior tipo iOS con 3 tabs: Dashboard, Historial, Acerca de
+- Iconos minimalistas (no emojis, usa SVGs inline o caracteres unicode finos)
+- Transición suave entre pantallas
 
-USA: Chart.js CDN (https://cdn.jsdelivr.net/npm/chart.js), fetch, CSS Grid/Flexbox.
-NO uses: React, TypeScript, Vue, Svelte, modules, imports, build tools, npm.
-Todo el texto en espanol. Sin comentarios en el codigo.
-
-DEVUELVE SOLO EL HTML COMPLETO, sin explicaciones ni markdown.
+Usa placeholder "25°C", "60%", "7.0 pH" como datos de ejemplo para que se vea el diseño completo.
