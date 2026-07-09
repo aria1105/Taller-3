@@ -160,8 +160,25 @@ const servidor = http.createServer(function(peticion, respuesta) {
   //  Devuelve las últimas 50 lecturas guardadas en el archivo.
   // ============================================================
 
-  } else if (url === "/history" && metodo === "GET") {
-    const historial = leerUltimasLecturas(50);                   // lee las últimas 50 líneas del archivo
+  } else if (url.startsWith("/history") && metodo === "GET") {
+    let limite = 50;                                              // valor por defecto
+
+    if (url.includes("?")) {                                      // si la URL tiene parámetros
+      const partes = url.split("?");                              // separa la ruta de los parámetros
+      const parametros = partes[1].split("&");                    // separa cada parámetro
+
+      for (let i = 0; i < parametros.length; i++) {
+        const par = parametros[i].split("=");                     // separa nombre y valor
+        if (par[0] === "limit") {                                 // si es el parámetro limit
+          limite = parseInt(par[1], 10);                          // convierte a número
+          if (isNaN(limite) || limite < 1) limite = 50;           // si es inválido, usa 50
+          if (limite > 200) limite = 200;                         // máximo 200 para evitar abusos
+          break;
+        }
+      }
+    }
+
+    const historial = leerUltimasLecturas(limite);                // lee las últimas N líneas
 
     respuesta.writeHead(200, { "Content-Type": "application/json" });  // envía código 200
     respuesta.end(JSON.stringify(historial));                     // devuelve el array de lecturas como JSON

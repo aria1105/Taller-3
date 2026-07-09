@@ -1,217 +1,547 @@
-<!DOCTYPE html>
-<!-- 
-  index.html - Página web del módulo hexagonal purificador de aire
-  Esta página se sirve desde el servidor Node.js y se abre en el navegador del celular.
-  Tiene tres pantallas: Dashboard (inicio), Historial (gráficos) y Acerca de (información).
--->
-<html lang="es">                         <!-- idioma español -->
+<!doctype html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">                 <!-- codificación de caracteres UTF-8 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- viewport hace que la página se vea bien en pantallas de celular -->
-  <title>Módulo Hexagonal Purificador</title>   <!-- título que aparece en la pestaña del navegador -->
-  <link rel="stylesheet" href="style.css">       <!-- enlaza el archivo de estilos CSS -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Siphon - Purificador Hexagonal</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- carga la librería Chart.js desde la CDN para hacer los gráficos de historial -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      background: #F0EADE;
+      color: #37371B;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .screen {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 20px 90px;
+      display: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen.active { display: block; }
+
+    .screen::-webkit-scrollbar { display: none; }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: #37371B;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(55,55,27,0.06);
+      margin-bottom: 16px;
+    }
+
+    .card-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #AFAE90;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+    .row .card { flex: 1; }
+
+    /* Gauge */
+    .gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+    }
+    .gauge-svg {
+      width: 140px;
+      height: 140px;
+      transform: rotate(-90deg);
+    }
+    .gauge-bg { fill: none; stroke: #E8E4D8; stroke-width: 8; }
+    .gauge-fill { fill: none; stroke: #52B788; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease, stroke 0.4s ease; }
+    .gauge-value {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-top: -100px;
+    }
+    .gauge-value .unit {
+      font-size: 16px;
+      font-weight: 400;
+      color: #AFAE90;
+    }
+    .gauge-label { font-size: 12px; color: #AFAE90; margin-top: 4px; }
+
+    /* Metric cards */
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .metric-value .unit { font-size: 14px; font-weight: 400; color: #AFAE90; }
+    .metric-icon { font-size: 22px; margin-bottom: 4px; }
+
+    /* Status */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .status-badge .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .status-saludable { background: #E8F5E9; color: #2E7D32; }
+    .status-saludable .dot { background: #2E7D32; }
+    .status-advertencia { background: #FFF8E1; color: #F57C00; }
+    .status-advertencia .dot { background: #F57C00; }
+    .status-critico { background: #FFEBEE; color: #C62828; }
+    .status-critico .dot { background: #C62828; }
+
+    .update-info {
+      font-size: 12px;
+      color: #AFAE90;
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    /* Bottom nav */
+    nav {
+      display: flex;
+      background: #fff;
+      border-top: 1px solid #E8E4D8;
+      padding: 8px 0 env(safe-area-inset-bottom, 8px);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      z-index: 100;
+    }
+    nav button {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 8px 0;
+      font-size: 10px;
+      font-weight: 500;
+      color: #AFAE90;
+      cursor: pointer;
+      transition: color 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-family: inherit;
+    }
+    nav button .nav-icon { font-size: 20px; line-height: 1; }
+    nav button.active { color: #37371B; }
+
+    /* History */
+    .range-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .range-selector button {
+      flex: 1;
+      padding: 8px 0;
+      border: 1px solid #D8D4C8;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      color: #AFAE90;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .range-selector button.active {
+      border-color: #37371B;
+      color: #37371B;
+      background: #F0EADE;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .stats-row .stat-card {
+      flex: 1;
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(55,55,27,0.04);
+    }
+    .stat-card .stat-label { font-size: 10px; color: #AFAE90; text-transform: uppercase; letter-spacing: 0.3px; }
+    .stat-card .stat-value { font-size: 18px; font-weight: 600; margin-top: 4px; }
+
+    .chart-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 12px rgba(55,55,27,0.06);
+    }
+    .chart-wrap canvas { width: 100% !important; }
+
+    /* About */
+    .hexagon {
+      width: 100px;
+      height: 56px;
+      background: #AFAE90;
+      position: relative;
+      margin: 30px auto 20px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hexagon-inner {
+      width: 86px;
+      height: 44px;
+      background: #F0EADE;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .component-list { list-style: none; }
+    .component-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #E8E4D8;
+      font-size: 15px;
+    }
+    .component-list li:last-child { border-bottom: none; }
+    .component-list .li-icon { font-size: 18px; color: #AFAE90; width: 24px; text-align: center; }
+    .component-list .li-label { color: #AFAE90; font-size: 12px; }
+
+    .about-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #5A5A4A;
+    }
+    .about-text strong { color: #37371B; }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #2A2A1E; color: #F0EADE; }
+      .card { background: #37371B; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+      .gauge-bg { stroke: #4A4A3A; }
+      .card-label { color: #AFAE90; }
+      .update-info { color: #8A8A7A; }
+      nav { background: #37371B; border-top-color: #4A4A3A; }
+      nav button { color: #8A8A7A; }
+      nav button.active { color: #F0EADE; }
+      .range-selector button { background: #37371B; border-color: #4A4A3A; color: #8A8A7A; }
+      .range-selector button.active { border-color: #AFAE90; color: #F0EADE; background: #4A4A3A; }
+      .stats-row .stat-card { background: #37371B; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+      .chart-wrap { background: #37371B; }
+      .hexagon { background: #4A4A3A; }
+      .hexagon-inner { background: #2A2A1E; }
+      .component-list li { border-bottom-color: #4A4A3A; }
+      .about-text { color: #C0C0B0; }
+      .about-text strong { color: #F0EADE; }
+      .status-saludable { background: #1B3D2B; color: #81C784; }
+      .status-saludable .dot { background: #81C784; }
+      .status-advertencia { background: #3D2D1B; color: #FFB74D; }
+      .status-advertencia .dot { background: #FFB74D; }
+      .status-critico { background: #3D1B1B; color: #EF9A9A; }
+      .status-critico .dot { background: #EF9A9A; }
+    }
+  </style>
 </head>
 <body>
-
-  <!-- ============================================================
-       BARRA DE NAVEGACIÓN SUPERIOR (TABS)
-       Permite cambiar entre las tres pantallas de la aplicación.
-       ============================================================ -->
-  <nav class="nav-tabs">                  <!-- contenedor de las pestañas de navegación -->
-    <button class="tab activo" data-pantalla="dashboard" onclick="cambiarPantalla('dashboard')">
-      📊 Inicio                          <!-- pestaña de inicio con ícono de gráfico -->
-    </button>
-    <button class="tab" data-pantalla="historial" onclick="cambiarPantalla('historial')">
-      📈 Historial                       <!-- pestaña de historial con ícono de tendencia -->
-    </button>
-    <button class="tab" data-pantalla="acerca" onclick="cambiarPantalla('acerca')">
-      ℹ️ Acerca                          <!-- pestaña de información con ícono de info -->
-    </button>
-  </nav>
-
-  <!-- ============================================================
-       PANTALLA 1: DASHBOARD (INICIO)
-       Muestra los datos actuales de los sensores y el estado de la planta.
-       ============================================================ -->
-  <section id="pantalla-dashboard" class="pantalla activa">
-    <!-- indicador LED virtual que muestra el mismo color que el LED físico del ESP32 -->
-    <div id="led-indicador" class="led led-verde"></div>  <!-- círculo que simula el LED de estado -->
-
-    <h1 class="titulo">🌿 Módulo Purificador</h1>   <!-- título principal de la aplicación -->
-
-    <!-- ============================================================
-         TARJETA DE TEMPERATURA Y HUMEDAD
-         Muestra los valores de temperatura y humedad leídos por el DHT11.
-         ============================================================ -->
-    <div class="tarjeta">                              <!-- contenedor con borde y sombra -->
-      <div class="tarjeta-icono">🌡️</div>             <!-- ícono de termómetro -->
-      <div class="tarjeta-contenido">                  <!-- contenido de la tarjeta -->
-        <span class="tarjeta-valor" id="valor-temperatura">--.-</span>  <!-- valor de temperatura -->
-        <span class="tarjeta-unidad">°C</span>                          <!-- unidad: grados Celsius -->
-        <span class="tarjeta-etiqueta">Temperatura</span>               <!-- etiqueta explicativa -->
-      </div>
-    </div>
-
-    <div class="tarjeta">                              <!-- segunda tarjeta para la humedad -->
-      <div class="tarjeta-icono">💧</div>             <!-- ícono de gota de agua -->
-      <div class="tarjeta-contenido">
-        <span class="tarjeta-valor" id="valor-humedad">--.-</span>      <!-- valor de humedad -->
-        <span class="tarjeta-unidad">%</span>                           <!-- unidad: porcentaje -->
-        <span class="tarjeta-etiqueta">Humedad</span>                   <!-- etiqueta explicativa -->
-      </div>
-    </div>
-
-    <!-- ============================================================
-         MEDIDOR CIRCULAR DE CALIDAD DE AIRE
-         Muestra el índice de calidad de aire (0-100) en un círculo con animación.
-         ============================================================ -->
-    <div class="tarjeta tarjeta-centrada">              <!-- tarjeta centrada para el gauge -->
-      <h2 class="subtitulo">Calidad del Aire</h2>      <!-- subtítulo de la sección -->
-
-      <div class="gauge-contenedor">                   <!-- contenedor del medidor circular -->
-        <svg class="gauge-svg" viewBox="0 0 120 120">  <!-- gráfico SVG de 120x120 píxeles -->
-          <!-- círculo de fondo (la pista gris) -->
-          <circle class="gauge-fondo" cx="60" cy="60" r="50"></circle>
-          <!-- círculo de avance (la barra de color) - se llena con stroke-dashoffset desde app.js -->
-          <circle id="gauge-avance" class="gauge-avance" cx="60" cy="60" r="50"
-                  stroke-dasharray="314" stroke-dashoffset="314"></circle>
-        </svg>
-        <div class="gauge-texto" id="gauge-valor">      <!-- texto en el centro del gauge -->
-          0                                             <!-- valor que se actualiza desde app.js -->
+  <div id="app">
+    <!-- Dashboard -->
+    <div class="screen active" id="screen-dashboard">
+      <h1>Dashboard</h1>
+      <div class="card">
+        <div class="card-label">pH del agua</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 120 120">
+            <circle class="gauge-bg" cx="60" cy="60" r="52"/>
+            <circle class="gauge-fill" id="gauge-circle" cx="60" cy="60" r="52"
+              stroke-dasharray="326.7" stroke-dashoffset="81.7"/>
+          </svg>
+          <div class="gauge-value" id="gauge-value">--<span class="unit">pH</span></div>
+          <div class="gauge-label">Tira de pH</div>
         </div>
       </div>
-      <div class="gauge-etiqueta">Índice de calidad (0-100)</div>  <!-- etiqueta debajo del gauge -->
-    </div>
-
-    <!-- ============================================================
-         INDICADOR DE pH DE LA PLANTA
-         Muestra el pH estimado con un círculo de color que cambia según el estado.
-         ============================================================ -->
-    <div class="tarjeta tarjeta-centrada">              <!-- tarjeta centrada para el pH -->
-      <h2 class="subtitulo">pH de la Planta</h2>       <!-- subtítulo de la sección -->
-
-      <div class="ph-contenedor">                      <!-- contenedor del indicador de pH -->
-        <div class="ph-bola" id="ph-bola"></div>       <!-- círculo de color que cambia según el pH -->
-        <div class="ph-valor" id="ph-valor">--</div>    <!-- valor numérico del pH -->
+      <div class="row">
+        <div class="card">
+          <div class="metric-icon">🌡</div>
+          <div class="card-label">Temperatura</div>
+          <div class="metric-value" id="temp-value">--<span class="unit">°C</span></div>
+        </div>
+        <div class="card">
+          <div class="metric-icon">💧</div>
+          <div class="card-label">Humedad</div>
+          <div class="metric-value" id="hum-value">--<span class="unit">%</span></div>
+        </div>
       </div>
-      <div class="ph-etiqueta" id="ph-etiqueta">Esperando datos...</div>  <!-- etiqueta de estado -->
+      <div class="card" style="text-align:center;">
+        <div class="card-label">Estado del purificador</div>
+        <div id="status-badge" class="status-badge status-saludable">
+          <span class="dot"></span>
+          <span id="status-text">Saludable</span>
+        </div>
+      </div>
+      <div class="update-info" id="update-info">Esperando datos...</div>
     </div>
 
-    <!-- ============================================================
-         MENSAJE DE ESTADO
-         Mensaje amigable en español según el estado del módulo.
-         ============================================================ -->
-    <div class="mensaje-estado" id="mensaje-estado">
-      Conectando con el módulo...                      <!-- mensaje inicial mientras se reciben datos -->
-    </div>
-
-    <!-- ============================================================
-         TIMESTAMP (última actualización)
-         Muestra hace cuánto tiempo se recibió la última lectura.
-         ============================================================ -->
-    <div class="timestamp" id="timestamp">
-      Última actualización: --                         <!-- texto de última actualización -->
-    </div>
-  </section>
-
-  <!-- ============================================================
-       PANTALLA 2: HISTORIAL
-       Muestra un gráfico de líneas con los datos de las últimas 24 horas.
-       ============================================================ -->
-  <section id="pantalla-historial" class="pantalla">
-    <h1 class="titulo">📈 Historial de Lecturas</h1>  <!-- título de la pantalla de historial -->
-
-    <div class="controles-grafico">                    <!-- controles para cambiar el gráfico -->
-      <button class="btn-control activo" data-grafico="temperatura" onclick="cambiarGrafico('temperatura')">
-        🌡️ Temperatura                                <!-- botón para ver gráfico de temperatura -->
-      </button>
-      <button class="btn-control" data-grafico="aire" onclick="cambiarGrafico('aire')">
-        💨 Calidad de Aire                             <!-- botón para ver gráfico de calidad de aire -->
-      </button>
-      <button class="btn-control" data-grafico="ph" onclick="cambiarGrafico('ph')">
-        🧪 pH                                          <!-- botón para ver gráfico de pH -->
-      </button>
-    </div>
-
-    <div class="grafico-contenedor">                   <!-- contenedor del lienzo del gráfico -->
-      <canvas id="grafico-historial"></canvas>          <!-- lienzo donde Chart.js dibuja el gráfico -->
-    </div>
-
-    <p class="nota">Mostrando las últimas 50 lecturas</p>  <!-- nota explicativa -->
-  </section>
-
-  <!-- ============================================================
-       PANTALLA 3: ACERCA DE
-       Explica qué hace el módulo y muestra un diagrama con los sensores.
-       ============================================================ -->
-  <section id="pantalla-acerca" class="pantalla">
-    <h1 class="titulo">ℹ️ Acerca del Módulo</h1>     <!-- título de la pantalla de información -->
-
-    <!-- ============================================================
-         DIAGRAMA DEL MÓDULO HEXAGONAL
-         Representación visual con CSS de la forma hexagonal y los componentes.
-         ============================================================ -->
-    <div class="diagrama-contenedor">                  <!-- contenedor del diagrama -->
-      <div class="hexagono">                           <!-- forma hexagonal con CSS -->
-        <div class="hex-sensor hex-sensor-dht">🌡️ DHT11</div>   <!-- sensor de temperatura arriba a la izquierda -->
-        <div class="hex-sensor hex-sensor-tcs">🎨 TCS230</div>   <!-- sensor de color arriba a la derecha -->
-        <div class="hex-sensor hex-sensor-mq">💨 MQ2</div>       <!-- sensor de gases abajo -->
-        <div class="hex-sensor hex-sensor-led">💡 LED RGB</div>  <!-- LED indicador -->
-        <div class="hex-sensor hex-sensor-planta">🌿 Alga</div>  <!-- planta marina en el centro -->
-        <div class="hex-label">Módulo Hexagonal 15cm</div>       <!-- etiqueta con la medida -->
+    <!-- History -->
+    <div class="screen" id="screen-history">
+      <h1>Historial</h1>
+      <div class="range-selector" id="range-selector">
+        <button data-limit="10">10</button>
+        <button data-limit="25" class="active">25</button>
+        <button data-limit="50">50</button>
+      </div>
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card"><div class="stat-label">Temp min</div><div class="stat-value" id="stat-temp-min">--</div></div>
+        <div class="stat-card"><div class="stat-label">Temp max</div><div class="stat-value" id="stat-temp-max">--</div></div>
+        <div class="stat-card"><div class="stat-label">Temp prom</div><div class="stat-value" id="stat-temp-avg">--</div></div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="history-chart"></canvas>
       </div>
     </div>
 
-    <!-- ============================================================
-         DESCRIPCIÓN DEL PROYECTO
-         Explicación de qué hace el módulo y cómo funciona.
-         ============================================================ -->
-    <div class="descripcion">                          <!-- contenedor del texto explicativo -->
-      <h2>¿Qué es este módulo?</h2>                   <!-- subtítulo de la sección -->
-      <p>
-        Este es un <strong>módulo hexagonal purificador de aire</strong> que
-        utiliza un alga marina (Ulva) para absorber CO₂ del ambiente mediante
-        la fotosíntesis. El módulo monitorea la calidad del aire y la salud
-        de la planta usando tres sensores conectados a un ESP32.
-      </p>
-
-      <h3>Sensores incluidos</h3>                     <!-- subtítulo de sensores -->
-      <ul>                                             <!-- lista de sensores -->
-        <li><strong>DHT11</strong> — Mide temperatura y humedad ambiente.</li>
-        <li><strong>MQ2</strong> — Detecta gases y calcula un índice de calidad de aire.</li>
-        <li><strong>TCS230</strong> — Lee el color de una tira indicadora de pH para estimar el pH del agua.</li>
-      </ul>
-
-      <h3>¿Cómo se usa?</h3>                          <!-- subtítulo de uso -->
-      <ol>                                             <!-- lista numerada de pasos -->
-        <li>Colocá el módulo en una superficie metálica (los imanes lo sostienen).</li>
-        <li>Conectalo a la corriente mediante el cable USB-C.</li>
-        <li>Escaneá el código QR para abrir esta aplicación web.</li>
-        <li>Monitoreá la temperatura, humedad, calidad del aire y pH de la planta.</li>
-      </ol>
-
-      <h3>Tecnología</h3>                             <!-- subtítulo de tecnología -->
-      <ul>                                             <!-- lista de tecnologías -->
-        <li>ESP32 con WiFi — envía los datos a un servidor Node.js.</li>
-        <li>Backend en Node.js — recibe y guarda las lecturas.</li>
-        <li>App web responsiva — funciona en cualquier celular sin instalar nada.</li>
-      </ul>
-
-      <p class="proyecto-universidad">
-        Proyecto de universidad — Sistemas Embebidos e IoT
-      </p>  <!-- nota de proyecto universitario -->
+    <!-- About -->
+    <div class="screen" id="screen-about">
+      <h1>Acerca de</h1>
+      <div class="hexagon"><div class="hexagon-inner">⬡</div></div>
+      <div class="card">
+        <ul class="component-list">
+          <li><span class="li-icon">⚡</span><div><div>ESP32</div><div class="li-label">Microcontrolador principal</div></div></li>
+          <li><span class="li-icon">🌡</span><div><div>DHT11</div><div class="li-label">Temperatura y humedad</div></div></li>
+          <li><span class="li-icon">🎨</span><div><div>TCS230</div><div class="li-label">Sensor de color para pH</div></div></li>
+          <li><span class="li-icon">🌿</span><div><div>Planta marina</div><div class="li-label">Purificación natural del aire</div></div></li>
+        </ul>
+      </div>
+      <div class="card about-text">
+        <p><strong>Siphon</strong> es un módulo purificador de aire con forma hexagonal que utiliza una planta marina para filtrar contaminantes. Sensores IoT monitorean la temperatura, humedad y pH del agua en tiempo real.</p>
+      </div>
     </div>
-  </section>
 
-  <!-- ============================================================
-       CARGA DE LOS SCRIPTS
-       app.js contiene toda la lógica de la aplicación web.
-       Se carga al final para asegurar que el HTML ya esté renderizado.
-       ============================================================ -->
-  <script src="app.js"></script>                      <!-- carga el archivo JavaScript principal -->
+    <!-- Nav -->
+    <nav>
+      <button class="active" data-screen="dashboard">
+        <span class="nav-icon">◉</span>
+        Dashboard
+      </button>
+      <button data-screen="history">
+        <span class="nav-icon">◷</span>
+        Historial
+      </button>
+      <button data-screen="about">
+        <span class="nav-icon">⬡</span>
+        Acerca de
+      </button>
+    </nav>
+  </div>
 
+  <script>
+    let chartInstance = null;
+    let latestData = { temperatura: 0, humedad: 0, ph: 7, phStatus: 'saludable' };
+    let historyData = [];
+    let selectedLimit = 25;
+
+    const COLORS = { temp: '#E76F51', hum: '#457B9D', ph: '#52B788' };
+
+    function showScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + name).classList.add('active');
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.querySelector('nav button[data-screen="' + name + '"]').classList.add('active');
+      if (name === 'history') initChart();
+    }
+
+    document.querySelectorAll('nav button').forEach(btn => {
+      btn.addEventListener('click', () => showScreen(btn.dataset.screen));
+    });
+
+    document.querySelectorAll('#range-selector button').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('#range-selector button').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        selectedLimit = parseInt(this.dataset.limit);
+        fetchHistory();
+      });
+    });
+
+    function setStatus(status) {
+      const badge = document.getElementById('status-badge');
+      const text = document.getElementById('status-text');
+      badge.className = 'status-badge status-' + status;
+      const map = { saludable: 'Saludable', advertencia: 'Advertencia', critico: 'Crítico' };
+      text.textContent = map[status] || 'Desconocido';
+    }
+
+    function updateGauge(value) {
+      const circle = document.getElementById('gauge-circle');
+      const max = 14;
+      const percent = Math.min(value / max, 1);
+      const total = 326.7;
+      const offset = total * (1 - percent);
+      circle.setAttribute('stroke-dashoffset', offset);
+
+      let color = '#52B788';
+      if (value < 5.5 || value > 8) color = '#C62828';
+      else if (value < 6.5 || value > 7.5) color = '#F57C00';
+      circle.setAttribute('stroke', color);
+      document.getElementById('gauge-value').innerHTML = value.toFixed(1) + '<span class="unit">pH</span>';
+    }
+
+    function updateDashboard(data) {
+      latestData = data;
+      document.getElementById('temp-value').innerHTML = (data.temperatura || 0).toFixed(1) + '<span class="unit">°C</span>';
+      document.getElementById('hum-value').innerHTML = (data.humedad || 0).toFixed(0) + '<span class="unit">%</span>';
+      updateGauge(data.ph || 7);
+      setStatus(data.phStatus || 'saludable');
+
+      const ts = data.timestamp ? new Date(data.timestamp * 1000) : new Date();
+      document.getElementById('update-info').textContent = 'Última actualización: ' +
+        ts.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function calcStats(arr, key) {
+      if (!arr || arr.length === 0) return { min: '--', max: '--', avg: '--' };
+      const vals = arr.map(d => parseFloat(d[key])).filter(v => !isNaN(v));
+      if (vals.length === 0) return { min: '--', max: '--', avg: '--' };
+      const min = Math.min(...vals);
+      const max = Math.max(...vals);
+      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+      return { min: min.toFixed(1), max: max.toFixed(1), avg: avg.toFixed(1) };
+    }
+
+    function initChart() {
+      const canvas = document.getElementById('history-chart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'Temp °C', data: [], borderColor: COLORS.temp, backgroundColor: COLORS.temp + '22', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, yAxisID: 'y' },
+            { label: 'Humedad %', data: [], borderColor: COLORS.hum, backgroundColor: COLORS.hum + '22', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, yAxisID: 'y1' },
+            { label: 'pH', data: [], borderColor: COLORS.ph, backgroundColor: COLORS.ph + '22', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, yAxisID: 'y2' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 1.6,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16, usePointStyle: true, font: { size: 11, family: '-apple-system, sans-serif' } } }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 8 } },
+            y: { position: 'left', title: { display: true, text: '°C / %', font: { size: 10 } }, grid: { color: '#E8E4D8' }, ticks: { font: { size: 10 } } },
+            y1: { position: 'right', title: { display: true, text: '%', font: { size: 10 } }, grid: { display: false }, ticks: { font: { size: 10 } } },
+            y2: { position: 'right', title: { display: true, text: 'pH', font: { size: 10 } }, grid: { display: false }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+
+      if (historyData.length > 0) updateChart();
+    }
+
+    function updateChart() {
+      if (!chartInstance) return;
+      const data = historyData;
+      const labels = data.map(d => {
+        const t = d.timestamp ? new Date(d.timestamp * 1000) : new Date();
+        return t.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      });
+
+      chartInstance.data.labels = labels;
+      chartInstance.data.datasets[0].data = data.map(d => d.temperatura);
+      chartInstance.data.datasets[1].data = data.map(d => d.humedad);
+      chartInstance.data.datasets[2].data = data.map(d => d.ph);
+      chartInstance.update('none');
+
+      const statsT = calcStats(data, 'temperatura');
+      document.getElementById('stat-temp-min').textContent = statsT.min;
+      document.getElementById('stat-temp-max').textContent = statsT.max;
+      document.getElementById('stat-temp-avg').textContent = statsT.avg;
+    }
+
+    function mapearDatos(data) {
+      return {
+        temperatura: data.temperature || 0,
+        humedad: data.humidity || 0,
+        ph: data.ph_estimate || 7,
+        phStatus: data.ph_color_label || 'saludable',
+        timestamp: data.timestamp || Math.floor(Date.now() / 1000)
+      };
+    }
+
+    async function fetchLatest() {
+      try {
+        const res = await fetch('/latest');
+        const data = await res.json();
+        if (data && data.temperature !== undefined) updateDashboard(mapearDatos(data));
+      } catch {}
+    }
+
+    async function fetchHistory() {
+      try {
+        const res = await fetch('/history?limit=' + selectedLimit);
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          historyData = data.map(mapearDatos);
+          if (document.getElementById('screen-history').classList.contains('active')) {
+            if (!chartInstance) initChart();
+            else updateChart();
+          }
+        }
+      } catch {}
+    }
+
+    fetchLatest();
+    setInterval(fetchLatest, 5000);
+    setInterval(fetchHistory, 10000);
+
+    fetchHistory();
+  </script>
 </body>
 </html>

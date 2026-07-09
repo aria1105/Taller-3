@@ -15,7 +15,7 @@
 #include <DHT.h>           // libreria para leer el sensor de temperatura y humedad DHT11
 
 // ============================================================
-//  CONFIGURACION DE RED — CAMBIAR SEGUN TU WIFI
+//  CONFIGURACION DE RED
 // ============================================================
 
 const char* ssid = "Telefono de Ari <3";       // nombre de la red WiFi (hotspot del celular)
